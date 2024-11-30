@@ -12,19 +12,16 @@
 
 #!/bin/bash
 
-# Assurez-vous que le script est exécuté par un utilisateur avec les droits appropriés
 if [ "$(id -u)" -ne 0 ]; then
   echo "Ce script doit être exécuté avec des privilèges de superutilisateur."
   exit 1
 fi
 
-# Emplacement des fichiers de logs
 LOG_FILES=(
   "/var/log/system.log"
   # "/var/log/authd.log" # Décommentez si authd.log devient disponible
 )
 
-# Expressions régulières pour la recherche de mots-clés supplémentaires
 REGEX_PATTERNS=(
   "auth.*fail"
   "login.*fail"
@@ -68,7 +65,6 @@ REGEX_PATTERNS=(
   "illegal.*operation"
 )
 
-# Fonction pour valider l'existence et la lisibilité des fichiers de logs
 validate_log_file() {
   local log_file=$1
   if [ ! -f "$log_file" ]; then
@@ -81,7 +77,6 @@ validate_log_file() {
   return 0
 }
 
-# Fonction pour rechercher les expressions régulières dans les logs et afficher des détails
 search_logs() {
   local log_file=$1
   local regex_pattern=$2
@@ -93,18 +88,15 @@ search_logs() {
   echo "Nombre de correspondances pour '${regex_pattern}': ${match_count}"
   if [ "$match_count" -gt 0 ]; then
     grep -Ei "${regex_pattern}" "${log_file}" | while read -r line; do
-      # Extraction de l'horodatage, de l'adresse IP et du nom d'utilisateur si disponible
       line_details=$(echo "$line" | awk '{print $1, $2, $3, $4, $5, $6, $7, $8, $9}')
       echo "$line_details"
     done
   fi
 }
 
-# Créer un rapport consolidé
 report_file="rapport_$(date +%Y%m%d_%H%M%S).txt"
 echo "Rapport d'analyse des logs - $(date)" > "$report_file"
 
-# Parcourir chaque fichier de logs et rechercher chaque expression régulière
 for log_file in "${LOG_FILES[@]}"; do
   if validate_log_file "$log_file"; then
     for regex_pattern in "${REGEX_PATTERNS[@]}"; do
